@@ -1,0 +1,11 @@
+@import "tailwindcss";
+/* Hide scrollbar for WebKit browsers */
+::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Ensure the content is still scrollable */
+  body {
+    overflow: hidden;
+  }
+  
