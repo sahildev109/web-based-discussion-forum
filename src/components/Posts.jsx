@@ -1,5 +1,5 @@
 import React from 'react'
-import useGetPosts from '../hooks/usegetPosts'
+import useGetPosts from '../hooks/useGetPosts'
 import Post from './Post';
 
 const Posts = ({selectedCategory}) => {
