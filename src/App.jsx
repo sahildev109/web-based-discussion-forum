@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, HashRouter } from "react-router-dom";
 import AuthenticationPage from "./AuthenticationPage";
 import Forum from "./HomePage";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -23,6 +23,7 @@ function App() {
   }
 
   return (
+    <HashRouter>
     <Routes>
       <Route
         path="/"
@@ -56,6 +57,7 @@ function App() {
 
       
     </Routes>
+    </HashRouter>
   );
 }
 
