@@ -51,6 +51,10 @@ const useSignUpWithEmail = () => {
 					
 					profilePicURL: "",
 					friends: [],
+          friendRequests: {
+            incoming: [],
+            outgoing: []
+          },
 					
 					posts: [],
 					createdAt: Date.now()

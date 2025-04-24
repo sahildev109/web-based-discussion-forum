@@ -1,33 +1,39 @@
 import { useEffect, useState } from "react";
-
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { firestore } from "../firebase/firebase";
 
 const useGetUserById = (userId) => {
-	const [isLoading, setIsLoading] = useState(true);
-	const [userProfile, setUserProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState(null);
 
+  useEffect(() => {
+    if (!userId) return;
 
+    setIsLoading(true);
+    const userRef = doc(firestore, "users", userId);
 
-	useEffect(() => {
-		const getUserProfile = async () => {
-			setIsLoading(true);
-			setUserProfile(null);
-			try {
-				const userRef = await getDoc(doc(firestore, "users", userId));
-				if (userRef.exists()) {
-					setUserProfile(userRef.data());
-				}
-			} catch (error) {
-			console.log("Error fetching user profile:", error);
-			} finally {
-				setIsLoading(false);
-			}
-		};
-		getUserProfile();
-	}, [userId]);
+    // 🔄 Listen for real-time changes
+    const unsubscribe = onSnapshot(
+      userRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          setUserProfile(snapshot.data());
+        } else {
+          setUserProfile(null);
+        }
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching real-time user profile:", error);
+        setIsLoading(false);
+      }
+    );
 
-	return {  userProfile,isLoading, setUserProfile };
+    // Cleanup listener on unmount or userId change
+    return () => unsubscribe();
+  }, [userId]);
+
+  return { userProfile, isLoading, setUserProfile };
 };
 
 export default useGetUserById;

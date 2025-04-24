@@ -11,7 +11,9 @@ import { Navigate, useNavigate } from "react-router-dom";
 import PostCreation from "./components/PostCreation";
 
 import Posts from "./components/Posts";
-
+import NotificationModal from "./components/NotificationModal";
+import useGetUserById from "./hooks/useGetUserById";
+import logo from "./assets/digital_tech_book_logo_design_template-removebg-preview.png";
 const categories = [ "Explore","General", "Announcements", "Feedback & Suggestions", 
   "Programming & Development", "Web Development", "Mobile App Development", 
   "AI & Machine Learning", "Cybersecurity", "Cloud Computing & DevOps", 
@@ -23,6 +25,7 @@ const categories = [ "Explore","General", "Announcements", "Feedback & Suggestio
 
 const Forum = () => {
   const {user}=AuthStore();
+  const {userProfile}=useGetUserById(user?.uid);
   const navigate=useNavigate();
 
 
@@ -31,15 +34,8 @@ const Forum = () => {
   const [searchQuery, setSearchQuery] = useState("");
   
   const [isOpen, setIsOpen] = useState(false);
+  const [isOpenN, setIsOpenN] = useState(false);
   const { handleLogout, isLoggingOut, error } = useLogout();
-
-  useEffect(() => {
-    axios.get(`http://localhost:5000/posts?category=${selectedCategory}`)
-      .then((response) => {
-        setPosts(response.data);
-      })
-      .catch((error) => console.error("Error fetching posts:", error));
-  }, [selectedCategory]);
 
 
 
@@ -49,11 +45,12 @@ const Forum = () => {
       <div className="fixed top-0 left-0 right-0 bg-gray-800 bg-opacity-90 shadow-md p-4 flex justify-between items-center z-20">
         <div className="flex items-center space-x-3">
        
-          <h1 className="text-2xl font-bold text-white font-mono"> &lt;/&gt; NEXUS</h1>
+          {/* <h1 className="text-2xl font-bold text-white font-mono"> &lt;/&gt; NEXUS</h1> */}
+          <img src={logo} alt="hello" className="h-15 w-24 p-0 ml-10 " />
         </div>
         <div className="flex items-center space-x-4">
-          <Bell className="w-6 h-6 cursor-pointer hover:text-yellow-400 transition-colors" title="Notifications" />
-          <MessageSquare className="w-6 h-6 cursor-pointer hover:text-yellow-400 transition-colors" title="Messages" />
+         {userProfile?.friendRequests.incoming.length===0? null:userProfile?.friendRequests.incoming.length} <Bell className="w-6 h-6 cursor-pointer hover:text-yellow-400 transition-colors" title="Notifications"  onClick={()=>{setIsOpenN(true)}}/>
+          <MessageSquare className="w-6 h-6 cursor-pointer hover:text-yellow-400 transition-colors" title="Messages" onClick={()=>navigate("/chat")} />
           <User className="w-6 h-6 cursor-pointer hover:text-yellow-400 transition-colors" title="Profile"
           onClick={()=>navigate("/pp")}
            />
@@ -98,7 +95,7 @@ const Forum = () => {
         </div>
       </div>
     </div>
-
+<NotificationModal isOpen={isOpenN} onClose={() => setIsOpenN(false)} />
 
     {isOpen && (
         <div className="fixed inset-0 flex items-start justify-end pt-18 backdrop-blur-md backdrop-opacity-50">

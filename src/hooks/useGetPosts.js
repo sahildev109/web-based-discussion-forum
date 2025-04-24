@@ -32,49 +32,50 @@
 // export default useGetPost;
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, orderBy, where, limit } from "firebase/firestore";
+import { collection, query, orderBy, where, limit, onSnapshot } from "firebase/firestore";
 import { firestore } from "../firebase/firebase";
 
 const useGetPost = (selectedCategory) => {
   const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log("Selected Category:", selectedCategory); // Debugging line
-    const fetchPosts = async () => {
-      try {
-        let postsQuery;
+    console.log("Selected Category:", selectedCategory);
+    setIsLoading(true);
 
-        if (selectedCategory !== "Explore") {
-          // Fetch posts that contain the selected category
-          postsQuery = query(
-            collection(firestore, "posts"),
-            where("category", "array-contains", selectedCategory),
-            orderBy("createdAt", "desc"),
-            limit(10)
-          );
-        } else {
-          // Fetch all posts if "Explore" is selected
-          postsQuery = query(
-            collection(firestore, "posts"),
-            orderBy("createdAt", "desc"),
-            limit(10)
-          );
-        }
+    let postsQuery;
 
-        const postDocs = await getDocs(postsQuery);
-        const fetchedPosts = postDocs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    if (selectedCategory !== "Explore") {
+      postsQuery = query(
+        collection(firestore, "posts"),
+        where("category", "array-contains", selectedCategory),
+        orderBy("createdAt", "desc"),
+        limit(10)
+      );
+    } else {
+      postsQuery = query(
+        collection(firestore, "posts"),
+        orderBy("createdAt", "desc"),
+        limit(10)
+      );
+    }
 
-        setPosts(fetchedPosts);
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      }
-    };
+    const unsubscribe = onSnapshot(postsQuery, (snapshot) => {
+      const fetchedPosts = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPosts(fetchedPosts);
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching posts:", error);
+      setIsLoading(false);
+    });
 
-    fetchPosts();
-  }, [selectedCategory]); // Refetch posts when selectedCategory changes
+    return () => unsubscribe(); // Clean up listener on unmount or category change
+  }, [selectedCategory]);
 
-  return { posts };
+  return { posts, isLoading };
 };
 
 export default useGetPost;
-

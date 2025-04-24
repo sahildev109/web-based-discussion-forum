@@ -5,6 +5,7 @@ import { firestore } from '../firebase/firebase';
 
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import axios from 'axios';
 
 const PostCreation = () => {
 
@@ -33,6 +34,31 @@ const PostCreation = () => {
   const modalRef = useRef(null);
   const  authUser=AuthStore((state)=>state.user);
 
+//--------------
+
+const checkProfanity = async (text) => {
+  try {
+    const response = await fetch('http://localhost:5000/api/checkProfanity', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text }),
+    });
+
+    const data = await response.json();
+    return data.hasProfanity;
+  } catch (error) {
+    console.error("Error checking profanity:", error);
+    return false;
+  }
+};
+
+
+//--------------
+
+
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -52,11 +78,24 @@ const PostCreation = () => {
 
   const handleSubmit = async() => {
 
-if(!title){
-    alert("Title is required");
-    setLoading(false);return;
+    if(!title){
+      alert("Title is required");
+      setLoading(false);return;
+    }
 
-}
+    //===============================
+
+    const combinedText = `${title} ${content}`;
+    const hasProfanity = await checkProfanity(combinedText);
+  
+    if (hasProfanity) {
+      alert("⚠️ Inappropriate content detected. Please revise your post.");
+      return;
+    }
+    //===============================
+
+
+
 const newPost={
    
     title: title,
@@ -84,7 +123,7 @@ setIsOpen(false);
 finally{
     setLoading(false);
 }
-window.location.reload();
+
   }
 
   return (

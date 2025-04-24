@@ -6,6 +6,7 @@ import { auth } from "./firebase/firebase";
 import ModalExample from "./modal";
 import ModalWithBlur from "./modal";
 import ProfilePage from "./ProfilePage";
+import { ChatPage } from "./ChatPage";
 
 
 function App() {
@@ -54,6 +55,8 @@ function App() {
 
     <Route
     path="/pp" element={<ProfilePage/>} > </Route>
+    <Route
+    path="/chat" element={<ChatPage/>} > </Route>
 
       
     </Routes>

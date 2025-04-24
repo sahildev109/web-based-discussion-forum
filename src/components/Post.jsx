@@ -5,11 +5,39 @@ import { timeAgo } from '../utils/timeAgo'
 import useLikePost from '../hooks/useLikePost'
 import PostComment from './PostComment'
 import Comment from './Comment'
+import AuthStore from '../store/AuthStore'
+import useAddFriendReq from '../hooks/useAddFriendReq'
+import { auth, firestore } from '../firebase/firebase'
+import useGetUserById from '../hooks/useGetUserById'
+import { doc, onSnapshot } from 'firebase/firestore'
 
 const Post = ({post}) => {
     const [isOpen, setIsOpen] = useState(false);
+    
+    const authUser = AuthStore((state) => state.user);
+   console.log(authUser.uid)
+    
+const { sendFriendRequest, sending, isFriend } = useAddFriendReq( { 
+  senderId: authUser.uid,
+  receiverId: post.createdBy
+}
+);
 
     const modalRef = useRef(null);
+    const [livePost, setLivePost] = useState(post);
+
+useEffect(() => {
+  if (!isOpen) return;
+
+  const unsub = onSnapshot(doc(firestore, "posts", post.id), (docSnap) => {
+    if (docSnap.exists()) {
+      setLivePost({ id: docSnap.id, ...docSnap.data() });
+    }
+  });
+
+  return () => unsub();
+}, [isOpen]);
+
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -27,9 +55,10 @@ const Post = ({post}) => {
         };
       }, [isOpen]); 
   
-    const {userProfile,isLoading} = useGetUserProfileById(post.createdBy)
+      const { userProfile: authorProfile, isLoading: loadingAuthor } = useGetUserById(post.createdBy);
+      const { userProfile: currentUserProfile, isLoading: loadingCurrentUser } = useGetUserById(authUser?.uid);
     const {isUpvoted, upvotes, handleLikePost, isUpdating }=useLikePost(post); 
-    if(isLoading){
+    if( loadingAuthor || loadingCurrentUser ){
         return <p className='text-white '>Loading...</p>
     }
  
@@ -38,18 +67,26 @@ const Post = ({post}) => {
 
    
 
-    <div key={post.id} className="p-4 bg-gray-800 shadow-md rounded-2xl m-3" >
+    <div key={post.id} className="p-4 bg-gray-800 shadow-md rounded-2xl m-3 hover:scale-104 transition" >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img src={'https://icons.veryicon.com/png/o/miscellaneous/common-icons-31/default-avatar-2.png'} alt="avatar" className="w-10 h-10 rounded-full" />
               <div>
-                <h4 className="font-semibold text-white">{userProfile.username}</h4>
+                <h4 className="font-semibold text-white">{authorProfile.username}</h4>
                 <p className="text-sm text-gray-500">{timeAgo(post.createdAt)}</p>
               </div>
             </div>
-            <button className="flex items-center text-white text-sm">
-              <UserPlus className="w-4 h-4 mr-1" /> Add Friend
+            {!isFriend && post.createdBy !== authUser.uid && (
+            
+              <button className="flex items-center text-white text-sm" onClick={sendFriendRequest} disabled={sending}>
+              <UserPlus className="w-4 h-4 mr-1" /> {currentUserProfile?.friendRequests?.outgoing?.includes(post.createdBy)
+  ? "Request Sent"
+  : sending
+  ? "Sending Req..."
+  : "Add Friend"}
+
             </button>
+            )}
           </div>
           <div className="mt-3" onClick={() => setIsOpen(true)}>
             <h3 className="font-bold text-white text-lg">{post.title}</h3>
@@ -82,7 +119,7 @@ const Post = ({post}) => {
           </div>
         </div>
 
-{/*<-==================================================->*/}
+{/*<-================================================================================================->*/}
 
 {isOpen&&
    (<div  className="fixed inset-0 flex items-center justify-center backdrop-blur-md backdrop-opacity-50 z-50">
@@ -111,7 +148,7 @@ const Post = ({post}) => {
      
      <div className="mt-4 flex items-center justify-between text-sm text-gray-400">
        <div>
-         <span className="font-bold">{userProfile.username}</span>
+         <span className="font-bold">{authorProfile.username}</span>
          <span className="ml-2 text-gray-500">• {timeAgo(post.createdAt)}</span>
        </div>
        <div className="flex space-x-4">
@@ -119,7 +156,7 @@ const Post = ({post}) => {
          <ArrowUp className={`w-4 h-4 ${isUpvoted ? "text-yellow-400" : "text-white"} hover:text-yellow-400`} /> <span>{upvotes}</span>
          </button>
          <button className="flex items-center space-x-1 hover:text-white">
-           <MessageCircle size={16} /> <span>{post.answers?.length || 0} Answers</span>
+           <MessageCircle size={16} /> <span>{livePost.answers?.length || 0} Answers</span>
          </button>
        </div>
      </div>
@@ -128,11 +165,11 @@ const Post = ({post}) => {
      <div className="mt-4 border-t border-gray-700 pt-4">
        <h3 className="text-lg font-semibold">Answers</h3>
        <div className="space-y-3">
-<PostComment post={post}/>
+<PostComment post={livePost}/>
 
 
-         {post.answers && post.answers.length > 0 ? (
-           post.answers.map((comment, index) => (
+         {livePost.answers && livePost.answers.length > 0 ? (
+           livePost.answers.map((comment, index) => (
              
 
               <Comment comment={comment} index={index}/>

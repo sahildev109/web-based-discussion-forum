@@ -3,9 +3,11 @@ import AuthStore from "./store/AuthStore";
 import { timeAgo } from "./utils/timeAgo";
 import useGetUserPosts from "./hooks/useGetUserPosts";
 import Post from "./components/Post";
+import useGetUserById from "./hooks/useGetUserById";
 
 const ProfilePage = () => {
 const {user}=AuthStore();
+const {  userProfile, isLoading: loadingAuthor } = useGetUserById(user?.uid);
 
     const  { posts, isLoading }=useGetUserPosts(user.uid)
     const [location, setLocation] = useState("MUMBAI");
@@ -18,7 +20,7 @@ const {user}=AuthStore();
 
   return (
 <>
-<div className="h-screen w-screen bg-gray-900">
+<div className="h-screen w-screen bg-gray-900 overflow-scroll">
 <div className="max-w-5xl mx-auto p-6 bg-gray-900 shadow-lg mt-10 border-2 border-yellow-400">
             
             <div className="flex items-center mb-8">
@@ -28,18 +30,21 @@ const {user}=AuthStore();
                 </div>
 
                
-                <div className="ml-6">
-                    <h1 className="text-3xl font-semibold text-yellow-500">{user.username}</h1>
-                    <p className="text-white mt-2">{user.fullName}</p>
-                    <p className="mt-2 text-white"><strong>Location:</strong> {location}</p>
-                    <p className="mt-2 text-white"><strong>Join Date:</strong> {timeAgo(user.createdAt)}</p>
-                    <button
-                        className="mt-4 bg-yellow-500 text-white py-2 px-4 rounded-full text-sm hover:bg-yellow-400"
-                       
-                    >
-                        Edit Info
-                    </button>
-                </div>
+             {loadingAuthor? <p className="text-white">Loading ....</p>:(
+                   <div className="ml-6">
+                   <h1 className="text-3xl font-semibold text-yellow-500">{ userProfile.username}</h1>
+                   <p className="text-white mt-2">{ userProfile.fullName}</p>
+                   <p className="text-white mt-2"> { userProfile.friends.length} Friends</p>
+                   <p className="mt-2 text-white"><strong>Location:</strong> {location}</p>
+                   <p className="mt-2 text-white"><strong>Join Date:</strong> {timeAgo( userProfile.createdAt)}</p>
+                   <button
+                       className="mt-4 bg-yellow-500 text-white py-2 px-4 rounded-full text-sm hover:bg-yellow-400"
+                      
+                   >
+                       Edit Info
+                   </button>
+               </div>
+             )}
             </div>
 
          
