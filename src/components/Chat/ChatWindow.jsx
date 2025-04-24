@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { collection, doc, onSnapshot, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { firestore } from "../../firebase/firebase";
 import AuthStore from "../../store/AuthStore";
+import checkProfanity from "../../Tools/moderation";
 
 import { timeAgo } from "../../utils/timeAgo";
 
@@ -35,6 +36,18 @@ const ChatWindow = ({ selectedFriend }) => {
 
   const sendMessage = async () => {
     if (!newMsg.trim()) return;
+//--------
+
+const hasProfanity = await checkProfanity(newMsg);
+  
+    if (hasProfanity) {
+      alert("⚠️ Inappropriate content detected. Please revise your message.");
+     
+      return;
+    }
+
+//--------
+
 
     const chatRef = doc(firestore, "chats", chatId);
 

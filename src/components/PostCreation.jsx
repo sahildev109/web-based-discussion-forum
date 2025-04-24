@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import AuthStore from '../store/AuthStore';
 import { addDoc, arrayUnion, collection, doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../firebase/firebase';
-
+import checkProfanity from '../Tools/moderation';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import axios from 'axios';
@@ -36,23 +36,23 @@ const PostCreation = () => {
 
 //--------------
 
-const checkProfanity = async (text) => {
-  try {
-    const response = await fetch('https://web-based-discussion-forum.onrender.com/api/checkProfanity', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text }),
-    });
+// const checkProfanity = async (text) => {
+//   try {
+//     const response = await fetch('https://web-based-discussion-forum.onrender.com/api/checkProfanity', {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify({ text }),
+//     });
 
-    const data = await response.json();
-    return data.hasProfanity;
-  } catch (error) {
-    console.error("Error checking profanity:", error);
-    return false;
-  }
-};
+//     const data = await response.json();
+//     return data.hasProfanity;
+//   } catch (error) {
+//     console.error("Error checking profanity:", error);
+//     return false;
+//   }
+// };
 
 
 //--------------

@@ -11,6 +11,11 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const filter = new Filter();
+filter.addWords(
+    'kill', 'suicide', 'sucker', 'ass', 'bitch', 'shit', 'fuck', 'damn', 'bastard', 
+    'dick', 'pussy', 'cock', 'fag', 'slut', 'whore', 'cunt', 'motherfucker',
+    'bimbo', 'retard', 'prick', 'twat', 'asshole', 'douchebag', 'bastards'
+  );
 
 app.post('/api/checkProfanity', (req, res) => {
     const { text } = req.body;
