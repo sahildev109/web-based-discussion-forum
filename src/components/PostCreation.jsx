@@ -38,7 +38,7 @@ const PostCreation = () => {
 
 const checkProfanity = async (text) => {
   try {
-    const response = await fetch('http://localhost:5000/api/checkProfanity', {
+    const response = await fetch('https://web-based-discussion-forum.onrender.com/api/checkProfanity', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -90,6 +90,8 @@ const checkProfanity = async (text) => {
   
     if (hasProfanity) {
       alert("⚠️ Inappropriate content detected. Please revise your post.");
+      setTitle("");
+      setContent("");
       return;
     }
     //===============================
