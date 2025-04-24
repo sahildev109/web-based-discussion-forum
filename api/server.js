@@ -13,7 +13,8 @@ const filter = new Filter();
 filter.addWords(
   'kill', 'suicide', 'sucker', 'ass', 'bitch', 'shit', 'fuck', 'damn', 'bastard',
   'dick', 'pussy', 'cock', 'fag', 'slut', 'whore', 'cunt', 'motherfucker',
-  'bimbo', 'retard', 'prick', 'twat', 'asshole', 'douchebag', 'bastards'
+  'bimbo', 'retard', 'prick', 'twat', 'asshole', 'douchebag', 'bastards','sisterfucker'
+
 );
 
 // Profanity check endpoint (POST)
