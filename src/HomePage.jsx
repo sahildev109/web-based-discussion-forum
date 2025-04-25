@@ -45,8 +45,8 @@ const Forum = () => {
       <div className="fixed top-0 left-0 right-0 bg-gray-800 bg-opacity-90 shadow-md p-4 flex justify-between items-center z-20">
         <div className="flex items-center space-x-3">
        
-          {/* <h1 className="text-2xl font-bold text-white font-mono"> &lt;/&gt; NEXUS</h1> */}
-          <img src={logo} alt="hello" className="h-15 w-24 p-0 ml-10 " />
+          <h1 className="text-2xl font-bold text-white font-mono"> &lt;/&gt; NEXUS</h1>
+          {/* <img src={logo} alt="hello" className="h-15 w-24 p-0 ml-10 " /> */}
         </div>
         <div className="flex items-center space-x-4">
          {userProfile?.friendRequests.incoming.length===0? null:userProfile?.friendRequests.incoming.length} <Bell className="w-6 h-6 cursor-pointer hover:text-yellow-400 transition-colors" title="Notifications"  onClick={()=>{setIsOpenN(true)}}/>
@@ -58,7 +58,7 @@ const Forum = () => {
         </div>
       </div>
       <div className="flex flex-grow pt-20">
-        <div className="w-64 bg-gray-800 bg-opacity-90 p-4 border-r border-gray-700">
+        <div className="max-w-64 bg-gray-800 bg-opacity-90 p-4 border-r border-gray-700">
           <input
             type="text"
             placeholder="Search categories..."

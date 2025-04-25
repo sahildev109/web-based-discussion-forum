@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState,  useCallback  } from 'react';
 import AuthStore from '../store/AuthStore';
 import { addDoc, arrayUnion, collection, doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../firebase/firebase';
@@ -31,31 +31,10 @@ const PostCreation = () => {
   const [loading, setLoading] = useState(false);
   const [title , setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [image, setImage] = useState(null);
   const modalRef = useRef(null);
   const  authUser=AuthStore((state)=>state.user);
 
-//--------------
-
-// const checkProfanity = async (text) => {
-//   try {
-//     const response = await fetch('https://web-based-discussion-forum.onrender.com/api/checkProfanity', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//       },
-//       body: JSON.stringify({ text }),
-//     });
-
-//     const data = await response.json();
-//     return data.hasProfanity;
-//   } catch (error) {
-//     console.error("Error checking profanity:", error);
-//     return false;
-//   }
-// };
-
-
-//--------------
 
 
 
@@ -76,6 +55,46 @@ const PostCreation = () => {
     };
   }, [isOpen]); 
 
+//===============================
+
+const categorizePost = useCallback(async (title, content) => {
+    const input = `Title: ${title}\nContent: ${content}\n\nCategorize the above text into the most relevant category from the following predefined list:\n${availableCategories.join(", ")}. Return only the category name.`;
+  
+    try {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer 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",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "mistralai/mistral-7b-instruct:free",
+          messages: [{ role: "user", content: input }],
+        })
+      });
+  
+      const data = await response.json();
+      const aiResponse = data.choices?.[0]?.message?.content || "";
+      console.log("AI Response:", aiResponse);
+  
+      const parsedCategories = aiResponse.split(",")
+        .map(cat => cat.trim())
+        .filter(cat => availableCategories.includes(cat));
+  
+      console.log("Parsed Categories:", parsedCategories);
+      setSelectedCategories(parsedCategories);
+      return parsedCategories;
+    } catch (error) {
+      console.error("Error categorizing post:", error);
+      setCategories(["General"]);
+      return ["General"];
+    }
+  }, [availableCategories]);
+
+
+//===============================
+
+
   const handleSubmit = async() => {
 
     if(!title){
@@ -86,8 +105,9 @@ const PostCreation = () => {
     //===============================
 
     const combinedText = `${title} ${content}`;
+    console.log('0.5 step')
     const hasProfanity = await checkProfanity(combinedText);
-  
+  console.log('0.75 step')
     if (hasProfanity) {
       alert("⚠️ Inappropriate content detected. Please revise your post.");
       setTitle("");
@@ -96,20 +116,57 @@ const PostCreation = () => {
     }
     //===============================
 
+    let imageUrl = "";
 
+    setLoading(true);
+      // 1. Upload image if one is selected
+      if (image) {
+        const formData = new FormData();
+        formData.append("file", image);
+        formData.append("upload_preset", "react-uploads"); // change this
+        formData.append("cloud_name", "dzsj989i0"); // change this
+  
+        const res = await axios.post("https://api.cloudinary.com/v1_1/dzsj989i0/image/upload", formData);
+        imageUrl = res.data.secure_url;
+      }
+
+     
+
+
+ 
+   const final =await categorizePost(title, content);
+
+   const normalizedArray1 = final.map(item => ({
+    value: item,
+    label: item
+  }));
+  console.log(normalizedArray1)
+
+const mergedCat=[...selectedCategories,...normalizedArray1]
+console.log("selCat"+selectedCategories)
+const validCategories = mergedCat.filter(cat => cat?.value);
+// ✅ Remove duplicates by using a Set
+const uniqueCategories = Array.from(new Set(validCategories.map(cat => cat.value)));
+console.log(mergedCat)
+// const uniqueCategories = Array.from(new Set(mergedCat.map(cat => cat.value)))
+//  console.log("uCAT"+uniqueCategories)
 
 const newPost={
    
     title: title,
     content: content,
-    category: selectedCategories.map(cat => cat.value),
+    category:uniqueCategories, // Use the value of the selected category
+    
+  
+    // category: finalCategories,
     upvotes: [],
     answers: [],
     createdAt: Date.now(),
 	createdBy: authUser.uid,
+  image: imageUrl
 }
 try {
-    setLoading(true);
+   
     const postDocRef = await addDoc(collection(firestore, "posts"), newPost);
     const userDocRef = doc(firestore, "users", authUser.uid);
 
@@ -118,6 +175,7 @@ await updateDoc(postDocRef, { postId: postDocRef.id })
 
 setTitle(""); 
 setContent("");
+setImage(null);
 setIsOpen(false);
 } catch (error) {
     console.error("Error adding post:", error);
@@ -148,7 +206,7 @@ finally{
 
       {isOpen && (
       <div className="fixed inset-0 flex items-center justify-center pt-18 backdrop-blur-md backdrop-opacity-50">
-  <div ref={modalRef} className="bg-gray-800 p-6 rounded-lg shadow-lg w-200 h-100 text-white flex flex-col">
+  <div ref={modalRef} className="bg-gray-800 p-6 rounded-lg shadow-lg min-w-200 min-h-100 max-h-200 text-white flex flex-col">
    
     <h2 className="text-xl font-bold mb-4">Create a Post</h2>
     <input
@@ -165,6 +223,22 @@ finally{
       value={content}
       onChange={(e) => setContent(e.target.value)}
     ></textarea>
+    <input
+  type="file"
+  accept="image/*"
+  onChange={(e) => setImage(e.target.files[0])}
+  className="m-2 border-2 border-yellow-500 rounded-md p-2 bg-gray-700 text-white"
+/>
+{image && (
+  <img
+    src={URL.createObjectURL(image)}
+    alt="Preview"
+    className="mt-4 mb-4 w-64 h-40 object-cover rounded-md shadow-md border border-gray-600"
+  />
+)}
+
+
+
 
 <CreatableSelect
     
